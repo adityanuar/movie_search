@@ -21,3 +21,7 @@ It uses MERN stack with additional meta framework _NextJS_.
 
 ![it's blazing fast!](https://raw.githubusercontent.com/adityanuar/movie_search/main/assets/lighthouse.png)
 _"it's blazing fast!"_
+
+## Live Demo
+
+[moviesearch.adityanuar.com](https://moviesearch.adityanuar.com)
