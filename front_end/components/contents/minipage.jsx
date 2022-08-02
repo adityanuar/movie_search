@@ -44,7 +44,9 @@ const Minipage = ({
           </div>
         </div>
         <div className="mt-5 ml-5 mr-5 order-first lg:order-2">
-          <img src={imageSrc} alt="" className="w-60 h-60 rounded-xl" />
+          {imageSrc !== "N/A" && (
+            <img src={imageSrc} alt="" className="w-60 h-60 rounded-xl" />
+          )}
         </div>
       </div>
     </div>

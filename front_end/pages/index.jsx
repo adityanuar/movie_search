@@ -192,7 +192,7 @@ export default function Home() {
                         />
                       ))}
               </div>
-              <div className="flex w-60 mx-auto mt-20 gap-2">
+              <div className="flex w-60 mx-auto mt-20 gap-2 mb-20">
                 <First
                   className={`w-10 h-10 ${
                     activities.current === 1
