@@ -20,4 +20,4 @@ It uses MERN stack with additional meta framework _NextJS_.
 2. Backend cache of OMDB data using MongoDB
 
 ![it's blazing fast!](https://raw.githubusercontent.com/adityanuar/movie_search/main/assets/lighthouse.png)
-it's blazing fast!
+_"it's blazing fast!"_
