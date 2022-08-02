@@ -9,6 +9,8 @@ import { useState, useRef } from "react";
 import Last from "../components/icons/last";
 import First from "../components/icons/first";
 import { Skeleton } from "@mui/material";
+import Popup from "reactjs-popup";
+import Minipage from "../components/contents/minipage";
 
 const STATUS = {
   idle: 0,
@@ -16,6 +18,7 @@ const STATUS = {
 };
 
 let axiosMemoData = {};
+let axiosMemoDataDetails = {};
 
 const axiosMemo = async (s, page = 1) => {
   const url = `s=${s}&page=${page}`;
@@ -33,59 +36,18 @@ const axiosMemo = async (s, page = 1) => {
   return data;
 };
 
-const setPageIds = (current, max) => {
-  if (max === 1) {
-    return [{ page: 1, key: 1 }];
-  } else if (max === 2) {
-    return [
-      { page: 1, key: 1 },
-      { page: 2, key: 2 },
-    ];
-  } else if (max === 3) {
-    return [
-      { page: 1, key: 1 },
-      { page: "...", key: 2 },
-      { page: 3, key: 3 },
-    ];
-  } else {
-    if (current === 1) {
-      return [
-        { page: 1, key: 1 },
-        { page: 2, key: 2 },
-        { page: "...", key: 3 },
-        { page: max, key: max },
-      ];
-    } else {
-      if (max - current > current - 1) {
-        return [
-          { page: current - 1, key: current - 1 },
-          { page: current, key: current },
-          { page: "...", key: max - 1 },
-          { page: max, key: max },
-        ];
-      } else if (current === max - 1) {
-        return [
-          { page: 1, key: 1 },
-          { page: "...", key: 2 },
-          { page: current, key: current },
-          { page: max, key: max },
-        ];
-      } else if (current === max) {
-        return [
-          { page: 1, key: 1 },
-          { page: "...", key: 2 },
-          { page: max, key: max },
-        ];
-      }
+const axiosMemoDetail = async (i) => {
+  const data = axiosMemoDataDetails[i];
+  if (!data) {
+    const { data: d } = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/moviedetail?i=${i}`
+    );
+    data = d;
+    if (data) {
+      axiosMemoDataDetails[i] = data;
     }
   }
-  return [
-    { page: 1, key: 1 },
-    { page: "...", key: 2 },
-    { page: current, key: current },
-    { page: "...", key: max - 1 },
-    { page: max, key: max - 1 },
-  ];
+  return data;
 };
 
 export default function Home() {
@@ -94,11 +56,14 @@ export default function Home() {
     current: 1,
     totalResults: null,
     max: null,
-    pageIds: null,
     query: "",
   });
   let [searchData, setSearchData] = useState(null);
+  let [searchDataDetail, setSearchDataDetail] = useState(null);
   let [status, setStatus] = useState(STATUS.idle);
+  let [statusDetail, setStatusDetail] = useState(STATUS.idle);
+  let [showDetail, setShowDetail] = useState(false);
+  let [choosenImage, setChoosenImage] = useState("");
   const doSearch = async (e, query, page = 1) => {
     console.log("do search");
     try {
@@ -116,7 +81,6 @@ export default function Home() {
           ...activities,
           totalResults: data.totalResults,
           max,
-          pageIds: setPageIds(page, max),
           query: s,
           current: page,
         });
@@ -129,6 +93,22 @@ export default function Home() {
       console.log(e);
     }
   };
+  const doSearchDetail = async (i) => {
+    try {
+      setStatusDetail(STATUS.progress);
+      const data = await axiosMemoDetail(i);
+      console.log(data);
+      if (data) {
+        setSearchDataDetail(data);
+      } else {
+        setSearchDataDetail(null);
+      }
+      setStatusDetail(STATUS.idle);
+    } catch (e) {
+      setStatusDetail(STATUS.idle);
+      console.log(e);
+    }
+  };
   const defineColor = (title) => {
     const colors = ["yellow", "blue", "green", "red"];
     for (let i = 0; i < colors.length; i++) {
@@ -136,6 +116,7 @@ export default function Home() {
     }
     return "black";
   };
+  const closeDetail = () => setShowDetail(false);
   return (
     <>
       <Head>
@@ -193,6 +174,11 @@ export default function Home() {
                         year={item.Year}
                         type={item.Type}
                         color={defineColor(item.Title)}
+                        onClick={() => {
+                          setShowDetail(true);
+                          doSearchDetail(item.imdbID);
+                          setChoosenImage(item.Poster);
+                        }}
                       />
                     ))
                   : new Array(10)
@@ -271,6 +257,42 @@ export default function Home() {
             </>
           )}
         </main>
+        <Popup
+          modal
+          overlayStyle={{ background: "rgba(0, 0, 0, 0.5)" }}
+          open={showDetail}
+          closeOnDocumentClick
+          onClose={closeDetail}
+          contentStyle={{
+            width: "50vw",
+            height: "90vh",
+            backgroundColor: "rgba(255,255,255,1)",
+            borderRadius: "15px",
+          }}
+        >
+          {statusDetail === STATUS.progress || !searchDataDetail ? (
+            <Skeleton
+              variant="rectangular"
+              width={"100%"}
+              height={"100%"}
+              animation="wave"
+              color="rgba(255,255,255,1)"
+            />
+          ) : (
+            <Minipage
+              title={searchDataDetail.Title}
+              released={searchDataDetail.Released}
+              runtime={searchDataDetail.Runtime}
+              genre={searchDataDetail.Genre}
+              director={searchDataDetail.Director}
+              writer={searchDataDetail.Writer}
+              actors={searchDataDetail.Actors}
+              type={searchDataDetail.Type}
+              plot={searchDataDetail.Plot}
+              imageSrc={choosenImage}
+            />
+          )}
+        </Popup>
       </div>
     </>
   );

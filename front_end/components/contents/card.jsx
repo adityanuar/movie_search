@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const Card = ({ title, poster, year, type, color = "white" }) => {
+const Card = ({ title, poster, year, type, color = "white", onClick }) => {
   const colorRGB = {
     yellow: [224, 216, 94, 1],
     blue: [47, 125, 235],
@@ -18,6 +18,7 @@ const Card = ({ title, poster, year, type, color = "white" }) => {
         setIsHover(true);
       }}
       onMouseLeave={() => setIsHover(false)}
+      onClick={onClick}
     >
       <div
         className="w-full h-full absolute transition-all"
