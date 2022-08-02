@@ -1,0 +1,66 @@
+version: "3"
+
+networks:
+  proxy:
+    external: true
+  internal:
+    external: false
+
+services:
+  
+  movie_search_frontend:
+   build:
+      context: ./front_end
+      dockerfile: Dockerfile
+   ports:
+    -  3000:3000
+   container_name: movie_search_frontend
+   networks:
+    - proxy
+    - internal
+   volumes:
+    -  ./front_end:/usr/app
+   depends_on:
+    - api
+   stdin_open: true
+   tty: true
+   labels:
+      - traefik.enable=true
+      - traefik.backend=movie_search_frontend
+      - traefik.frontend.rule=Host:www.moviesearch.adityanuar.com,moviesearch.adityanuar.com
+      - traefik.frontend.headers.SSLRedirect=true
+      - traefik.frontend.headers.SSLForceHost=true
+      - traefik.frontend.headers.SSLHost=moviesearch.adityanuar.com
+      - traefik.frontend.redirect.regex=.*.moviesearch.adityanuar.com([/](.*))*
+      - traefik.frontend.redirect.replacement=https://moviesearch.adityanuar.com$${1}
+      - traefik.frontend.redirect.permanent=true
+      - traefik.port=80
+      - traefik.docker.network=proxy
+
+  movie_search_backend:
+   build:
+      context: ./back_end
+      dockerfile: Dockerfile
+   ports:
+     - 8000:8000
+   container_name: movie_search_backend
+   networks:
+    - internal
+   volumes:
+    - ./back_end:/usr/app
+   depends_on:
+    - moview_search_db
+
+  moview_search_db:
+    image: mongo
+    ports:
+      - 27017:27017
+    container_name: moview_search_db
+    networks:
+      - internal
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
+    driver: local
