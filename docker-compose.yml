@@ -12,14 +12,13 @@ services:
    build:
       context: ./front_end
       dockerfile: Dockerfile
-   ports:
-    -  3000:3000
    container_name: movie_search_frontend
    networks:
     - proxy
     - internal
    volumes:
     -  ./front_end:/usr/app
+    - /usr/app/node_modules
    depends_on:
     - api
    stdin_open: true
@@ -34,22 +33,34 @@ services:
       - traefik.frontend.redirect.regex=.*.moviesearch.adityanuar.com([/](.*))*
       - traefik.frontend.redirect.replacement=https://moviesearch.adityanuar.com$${1}
       - traefik.frontend.redirect.permanent=true
-      - traefik.port=80
+      - traefik.port=3000
       - traefik.docker.network=proxy
 
   movie_search_backend:
    build:
       context: ./back_end
       dockerfile: Dockerfile
-   ports:
-     - 8000:8000
    container_name: movie_search_backend
    networks:
+    - proxy
     - internal
    volumes:
     - ./back_end:/usr/app
+    - /usr/app/node_modules
    depends_on:
     - moview_search_db
+   labels:
+    - traefik.enable=true
+    - traefik.backend=movie_search_backend
+    - traefik.frontend.rule=Host:www.apimoviesearch.adityanuar.com,apimoviesearch.adityanuar.com
+    - traefik.frontend.headers.SSLRedirect=true
+    - traefik.frontend.headers.SSLForceHost=true
+    - traefik.frontend.headers.SSLHost=apimoviesearch.adityanuar.com
+    - traefik.frontend.redirect.regex=.*.apimoviesearch.adityanuar.com([/](.*))*
+    - traefik.frontend.redirect.replacement=https://apimoviesearch.adityanuar.com$${1}
+    - traefik.frontend.redirect.permanent=true
+    - traefik.port=8000
+    - traefik.docker.network=proxy
 
   moview_search_db:
     image: mongo
